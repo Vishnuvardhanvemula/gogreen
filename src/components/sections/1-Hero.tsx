@@ -1,141 +1,183 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import Image from "next/image";
-import { ArrowRight, BatteryCharging, Sun } from "lucide-react";
+import { useEffect, useState } from "react";
+
+// --- Animated counter component ---
+function Counter({ to, suffix = "", duration = 2 }: { to: number; suffix?: string; duration?: number }) {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (v) => Math.round(v).toLocaleString());
+  const [display, setDisplay] = useState("0");
+
+  useEffect(() => {
+    const controls = animate(count, to, { duration, ease: "easeOut" });
+    const unsubscribe = rounded.on("change", (v) => setDisplay(v));
+    return () => { controls.stop(); unsubscribe(); };
+  }, [to, duration, count, rounded]);
+
+  return <span>{display}{suffix}</span>;
+}
+
+// --- Word-by-word reveal ---
+const lines = [
+  { words: ["Solar", "infrastructure,"], delay: 0.3 },
+  { words: ["built", "to", "last"], delay: 0.9 },
+  { words: ["25", "years."], delay: 1.5 },
+];
+
+function KineticHeadline() {
+  return (
+    <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] font-heading font-medium text-white leading-[1.05] tracking-tight mb-8">
+      {lines.map((line, li) => (
+        <span key={li} className="block overflow-hidden">
+          {line.words.map((word, wi) => (
+            <motion.span
+              key={wi}
+              className="inline-block mr-[0.25em]"
+              initial={{ y: "110%", opacity: 0 }}
+              animate={{ y: "0%", opacity: 1 }}
+              transition={{
+                duration: 0.7,
+                ease: [0.16, 1, 0.3, 1],
+                delay: line.delay + wi * 0.12,
+              }}
+            >
+              {word}
+            </motion.span>
+          ))}
+        </span>
+      ))}
+    </h1>
+  );
+}
+
+const stats = [
+  { value: 7,   suffix: "",   label: "States" },
+  { value: 500, suffix: "+",  label: "Projects" },
+  { value: 25,  suffix: "yr", label: "Warranty" },
+  { value: 48,  suffix: "hr", label: "Response" },
+];
 
 export function HeroSection() {
-  
-  const containerVars = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
-    }
-  };
+  const [statsVisible, setStatsVisible] = useState(false);
 
-  const itemVars: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } }
-  };
+  // Trigger stats after headline finishes (~2.2s)
+  useEffect(() => {
+    const t = setTimeout(() => setStatsVisible(true), 2400);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
-    <section className="relative w-full h-[100dvh] min-h-[750px] flex items-center justify-center overflow-hidden bg-slate-950">
-      
-      {/* 1. Full Bleed Background Image */}
-      <motion.div 
-        className="absolute inset-0 z-0"
-        initial={{ scale: 1.05 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 15, ease: "easeOut" }}
-      >
+    <section className="relative w-full h-[100dvh] min-h-[700px] overflow-hidden flex items-center">
+
+      {/* ── LAYER 1: Full-bleed aerial background ── */}
+      <div className="absolute inset-0 z-0">
         <Image
-          src="/images/hero_abstract_solar_macro.png"
-          alt="Luxury Solar Array on modern home"
+          src="/images/hero_luxury_solar_8k.png"
+          alt="Aerial solar installation"
           fill
-          className="object-cover object-[center_70%] opacity-90"
+          sizes="100vw"
+          className="object-cover object-center scale-105"
           priority
         />
-        
-        {/* Subtle Architectural Grid Overlay */}
-        <div 
-          className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" 
-          style={{ 
-            backgroundImage: 'linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)',
-            backgroundSize: '80px 80px' 
-          }} 
-        />
-        
-        {/* Gradients for Text Readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent sm:bg-gradient-to-r sm:from-slate-950/90 sm:via-slate-950/50 sm:to-transparent" />
-        <div className="absolute bottom-0 left-0 w-full h-[30%] bg-gradient-to-t from-slate-950 to-transparent" />
-      </motion.div>
 
-      {/* --- UNIQUE ELEMENT: Live System Telemetry Widget --- */}
-      <motion.div 
-        className="absolute right-6 lg:right-12 xl:right-16 top-1/4 z-20 hidden md:flex flex-col w-72 bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden"
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      >
-         {/* Header */}
-         <div className="flex justify-between items-center px-6 py-4 border-b border-white/10 bg-white/5">
-            <span className="text-[10px] text-white/50 tracking-[0.2em] uppercase font-semibold">Live Telemetry</span>
-            <div className="flex items-center gap-2">
-               <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
-               <span className="text-[9px] text-emerald-400 tracking-wider">OPTIMAL</span>
-            </div>
-         </div>
-         {/* Body */}
-         <div className="p-6 flex flex-col gap-6">
-            {/* Stat 1 */}
-            <div className="flex flex-col gap-1">
-               <div className="flex items-center gap-2 text-white/40 mb-1">
-                  <Sun className="w-3.5 h-3.5" />
-                  <span className="text-[10px] uppercase tracking-wider font-medium">Array Yield</span>
-               </div>
-               <div className="text-3xl font-heading text-white font-medium flex items-baseline gap-1">
-                 14.2 <span className="text-sm text-brand-primary font-bold">kW</span>
-               </div>
-            </div>
-            {/* Stat 2 */}
-            <div className="flex flex-col gap-1">
-               <div className="flex items-center gap-2 text-white/40 mb-1">
-                  <BatteryCharging className="w-3.5 h-3.5" />
-                  <span className="text-[10px] uppercase tracking-wider font-medium">Powerwall Reserves</span>
-               </div>
-               <div className="w-full h-1.5 bg-black/40 rounded-full mt-2 overflow-hidden border border-white/5">
-                  <motion.div className="h-full bg-amber-500 rounded-full" initial={{ width: "0%" }} animate={{ width: "94%" }} transition={{ delay: 1.5, duration: 2, ease: "easeOut" }} />
-               </div>
-               <div className="flex justify-between text-[10px] mt-1.5 text-white/60 font-medium">
-                  <span>Capacity</span>
-                  <span className="text-white">94%</span>
-               </div>
-            </div>
-         </div>
-      </motion.div>
-      {/* --------------------------------------------------- */}
-
-      {/* Content Container - Bottom-Left Anchored */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 flex flex-col justify-end h-full pb-20 sm:pb-32 pt-32 pointer-events-none">
+        {/* Dark overlay that "lifts" on load — from ~96% to ~55% */}
         <motion.div
-           variants={containerVars}
-           initial="hidden"
-           animate="show"
-           className="max-w-3xl pointer-events-auto"
-        >
-          {/* Subtle Label */}
-          <motion.div variants={itemVars} className="flex items-center gap-4 mb-6 md:mb-8">
-            <div className="w-8 h-[1px] bg-amber-500" />
-            <span className="text-amber-500 text-[11px] md:text-xs font-bold tracking-[0.3em] uppercase">
-              Architectural Solar Integration
-            </span>
-          </motion.div>
-          
-          {/* Elegant Readable Headline */}
-          <motion.h1 variants={itemVars} className="text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-heading font-medium text-white leading-[1.05] tracking-tight mb-6 md:mb-8 text-shadow-xl">
-             Power your estate <br className="hidden sm:block"/>
-             with <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">absolute precision.</span>
-          </motion.h1>
-          
-          {/* Sophisticated Paragraph */}
-          <motion.p variants={itemVars} className="text-lg md:text-xl text-white/70 font-sans leading-relaxed mb-10 max-w-xl font-light">
-            High-performance energy systems engineered specifically for luxury residences. Fully integrated. Protected for 25 years.
-          </motion.p>
-          
-          {/* Action Area */}
-          <motion.div variants={itemVars} className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <button className="group relative bg-amber-500 hover:bg-amber-400 text-slate-950 px-10 py-4 md:py-5 rounded-full font-bold text-sm md:text-[15px] tracking-wide flex items-center justify-center gap-3 transition-colors duration-300 w-full sm:w-auto shadow-[0_0_30px_rgba(245,158,11,0.2)]">
-              Request a Blueprint
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="w-full sm:w-auto bg-transparent hover:bg-white/5 text-white border border-white/20 px-10 py-4 md:py-5 rounded-full font-semibold text-sm md:text-[15px] tracking-wide transition-colors duration-300">
-              Technical Specs
-            </button>
-          </motion.div>
-        </motion.div>
+          className="absolute inset-0 bg-[#080F09]"
+          initial={{ opacity: 0.96 }}
+          animate={{ opacity: 0.58 }}
+          transition={{ duration: 2.2, ease: "easeInOut", delay: 0.1 }}
+        />
+
+        {/* Permanent gradient: left side always darker for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A1A0B]/80 via-[#0A1A0B]/30 to-transparent" />
+
+        {/* Bottom fade for clean section transition */}
+        <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-[#0D1F0F] to-transparent" />
       </div>
 
+      {/* ── LAYER 2: Content ── */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-8 md:px-16 pt-28 pb-28 md:pb-36 flex flex-col justify-center h-full">
+
+        {/* Pre-headline label */}
+        <motion.div
+          className="flex items-center gap-3 mb-10"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+        >
+          <div className="w-8 h-px bg-amber-500" />
+          <span className="text-amber-500 text-[10px] font-bold tracking-[0.3em] uppercase">
+            Solar EPC · Decommissioning · Removal & Repower
+          </span>
+        </motion.div>
+
+        {/* Kinetic headline */}
+        <KineticHeadline />
+
+        {/* Sub-copy */}
+        <motion.p
+          className="text-white/60 text-lg md:text-xl font-sans font-light leading-relaxed mb-14 max-w-xl"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 2.3 }}
+        >
+          GoGreen operates across 7 states. Every install backed by a 25-year warranty and a 48-hour response commitment — in writing.
+        </motion.p>
+
+        {/* CTAs */}
+        <motion.div
+          className="flex flex-col sm:flex-row items-start sm:items-center gap-5"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 2.6 }}
+        >
+          <a
+            href="/get-assessment"
+            className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white px-10 py-5 font-bold text-sm tracking-widest uppercase transition-colors duration-300"
+          >
+            Get a Free Assessment
+          </a>
+          <a
+            href="/services"
+            className="text-white/70 hover:text-white border-b border-white/30 hover:border-white pb-0.5 font-medium text-sm tracking-widest uppercase transition-colors duration-300"
+          >
+            See Our Services →
+          </a>
+        </motion.div>
+
+        {/* Stats bar */}
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 border-t border-white/10 bg-[#0A1A0B]/70 backdrop-blur-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: statsVisible ? 1 : 0, y: statsVisible ? 0 : 20 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <div className="max-w-7xl mx-auto px-8 md:px-16 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
+            {stats.map((stat, i) => (
+              <div key={i} className="flex flex-col items-center justify-center py-6 px-4 gap-0.5">
+                <span className="text-2xl md:text-3xl font-heading font-medium text-white">
+                  {statsVisible && <Counter to={stat.value} suffix={stat.suffix} duration={1.8} />}
+                </span>
+                <span className="text-[10px] font-bold tracking-[0.25em] uppercase text-white/40">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+      </div>
+
+      {/* ── LAYER 3: subtle grid texture ── */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none opacity-[0.025]"
+        style={{
+          backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
     </section>
   );
 }

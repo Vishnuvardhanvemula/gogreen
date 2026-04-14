@@ -1,18 +1,18 @@
 export function TrustBarSection() {
   const stats = [
-    { label: "1,200+ Installations" },
-    { label: "Certified in 7 States" },
-    { label: "25-Year Custom Warranty" },
-    { label: "48-Hour Response Guarantee" }
+    "7 States",
+    "500+ Projects",
+    "25 Years Warranty",
+    "48 Hours Response",
+    "100% In-House Teams"
   ];
 
   return (
-    <div className="w-full bg-[#064e3b] border-y border-white/5 py-4 overflow-hidden relative z-20">
-      <div className="max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row justify-between items-center gap-4 text-white text-xs font-semibold tracking-[0.2em] uppercase">
+    <div className="w-full bg-[#1A3020] py-6 relative z-20 border-b border-white/5">
+      <div className="max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row justify-center items-center divide-y md:divide-y-0 md:divide-x divide-white/20">
         {stats.map((stat, idx) => (
-          <div key={idx} className="flex items-center gap-3 w-full md:w-auto justify-center md:justify-start">
-             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 hidden md:block" />
-             {stat.label}
+          <div key={idx} className="w-full md:w-auto px-6 py-2 md:py-0 text-center font-sans">
+             <span className="text-white text-sm tracking-[0.05em]">{stat}</span>
           </div>
         ))}
       </div>
