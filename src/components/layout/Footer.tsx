@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="w-full bg-[#064e3b] text-white pt-20 pb-10 border-t border-white/10">
+    <footer className="w-full bg-[#064e3b] text-white pt-16 md:pt-20 pb-8 md:pb-10 border-t border-white/10">
       <div className="max-w-7xl mx-auto px-6 w-full flex flex-col md:flex-row gap-12 md:gap-20">
         
         {/* Brand Column */}

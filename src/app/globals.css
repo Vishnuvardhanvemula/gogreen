@@ -18,6 +18,12 @@
     --background: #ffffff;
     --foreground: #0f172a;
   }
+  
+  @media (min-width: 640px) {
+    * {
+      cursor: none !important;
+    }
+  }
 }
 
 html {

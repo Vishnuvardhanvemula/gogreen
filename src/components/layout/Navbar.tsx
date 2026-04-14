@@ -134,7 +134,7 @@ export function Navbar() {
             href="/get-assessment"
             className="inline-block font-bold text-[11px] tracking-[0.15em] uppercase px-7 py-3.5 bg-[#1B5E20] text-white hover:bg-[#2E7D32] transition-colors duration-200 whitespace-nowrap"
           >
-            Get a Free Assessment
+            Get Assessment
           </a>
         </div>
 
@@ -195,7 +195,7 @@ export function Navbar() {
             className="block w-full text-center font-bold text-sm tracking-widest uppercase px-8 py-5 bg-[#1B5E20] text-white hover:bg-[#2E7D32] transition-colors"
             onClick={() => setMobileOpen(false)}
           >
-            Get a Free Assessment
+            Get Assessment
           </a>
 
           <p className="text-white/30 text-[10px] tracking-[0.1em] text-center mt-6">
