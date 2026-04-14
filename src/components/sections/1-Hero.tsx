@@ -1,317 +1,340 @@
 "use client";
 
-import { motion, useMotionValue, useTransform, animate, useSpring } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useState, MouseEvent } from "react";
+import { motion, useMotionValue, useSpring, useTransform, MotionValue, animate } from "framer-motion";
+import { useEffect, useState, MouseEvent, useRef } from "react";
 
-// --- Animated counter component ---
-function Counter({ to, suffix = "", duration = 2 }: { to: number; suffix?: string; duration?: number }) {
-  const count = useMotionValue(0);
-  const rounded = useTransform(count, (v) => Math.round(v).toLocaleString());
-  const [display, setDisplay] = useState("0");
+// ── Abstracted Solar Cell Component ──
+function SolarCell({ 
+  mouseX, 
+  mouseY, 
+  xIndex, 
+  yIndex, 
+  columns, 
+  rows,
+  winSize
+}: { 
+  mouseX: MotionValue<number>; 
+  mouseY: MotionValue<number>; 
+  xIndex: number; 
+  yIndex: number; 
+  columns: number; 
+  rows: number;
+  winSize: { w: number, h: number };
+}) {
+  const rectX = (xIndex + 0.5) * (winSize.w / columns);
+  const rectY = (yIndex + 0.5) * (winSize.h / rows);
 
-  useEffect(() => {
-    const controls = animate(count, to, { duration, ease: "easeOut" });
-    const unsubscribe = rounded.on("change", (v) => setDisplay(v));
-    return () => { controls.stop(); unsubscribe(); };
-  }, [to, duration, count, rounded]);
+  // FIX 1: More dramatic tilt range since perspective is now per-cell
+  const rotateX = useTransform(mouseY, (y) => -((y - rectY) / winSize.h) * 52);
+  const rotateY = useTransform(mouseX, (x) => ((x - rectX) / winSize.w) * 52);
 
-  return <span>{display}{suffix}</span>;
-}
+  // Quadratic falloff for punchy, realistic light drop
+  const glareOpacity = useTransform(() => {
+    const dx = mouseX.get() - rectX;
+    const dy = mouseY.get() - rectY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const maxDist = winSize.w / 2.2;
+    const lin = Math.max(0, 1 - dist / maxDist);
+    return lin * lin;
+  });
 
-// --- Word-by-word reveal ---
-const lines = [
-  { words: ["Solar", "infrastructure,"], delay: 0.3 },
-  { words: ["built", "to", "last"], delay: 0.9 },
-  { words: ["25", "years."], delay: 1.5 },
-];
+  const borderGlow = useTransform(() => {
+    const g = glareOpacity.get();
+    return `rgba(52, 211, 153, ${0.06 + g * 0.55})`;
+  });
 
-function KineticHeadline() {
+  // FIX 3: Dynamic inset shadow makes gaps look recessed/dimensional
+  const cellShadow = useTransform(() => {
+    const g = glareOpacity.get();
+    const shadowIntensity = Math.round(g * 8);
+    return `inset 0 0 ${shadowIntensity}px rgba(251,191,36,0.08), inset 0 1px 0 rgba(255,255,255,${g * 0.12})`;
+  });
+
   return (
-    <h1 
-      className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.5rem] xl:text-[5.5rem] font-heading font-medium text-white leading-[1.05] tracking-tight mb-4 md:mb-8"
-      aria-label="Solar infrastructure, built to last 25 years."
-    >
-      {lines.map((line, li) => (
-        <span key={li} className="block overflow-hidden pb-1 md:pb-2" aria-hidden="true">
-          {line.words.map((word, wi) => (
-            <motion.span
-              key={wi}
-              className="inline-block mr-[0.25em]"
-              initial={{ y: "110%", opacity: 0 }}
-              animate={{ y: "0%", opacity: 1 }}
-              transition={{
-                duration: 0.8,
-                ease: [0.16, 1, 0.3, 1],
-                delay: line.delay + wi * 0.12,
-              }}
-            >
-              {word}
-            </motion.span>
-          ))}
-        </span>
-      ))}
-    </h1>
+    // FIX 1: Each cell has its OWN perspective — makes individual tilt dramatic + visible
+    <div style={{ perspective: "550px", width: "100%", height: "100%" }}>
+      <motion.div 
+        className="relative w-full h-full overflow-hidden"
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          background: "linear-gradient(155deg, #0f1e2b 0%, #060f16 55%, #020709 100%)",
+          borderColor: borderGlow,
+          border: "0.5px solid",
+          borderRadius: "1px",
+          boxShadow: cellShadow,
+        }}
+      >
+        {/* Angled static gloss — thick glass look */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "linear-gradient(130deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 35%, transparent 55%)"
+          }}
+        />
+
+        {/* Horizontal silver cell fingers */}
+        <div 
+          className="absolute inset-0 opacity-[0.16] pointer-events-none"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent calc(20% - 0.5px),
+              rgba(200, 225, 255, 0.55) calc(20% - 0.5px),
+              rgba(200, 225, 255, 0.55) calc(20% + 0.5px)
+            )`,
+          }}
+        />
+        {/* Vertical main busbars (3) */}
+        <div 
+          className="absolute inset-0 opacity-[0.26] pointer-events-none"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent calc(33.33% - 0.6px),
+              rgba(210, 235, 255, 0.8) calc(33.33% - 0.6px),
+              rgba(210, 235, 255, 0.8) calc(33.33% + 0.6px)
+            )`,
+          }}
+        />
+
+        {/* FIX 2: Crisper amber-orange specular (not yellow) */}
+        <motion.div 
+          className="absolute inset-0 pointer-events-none"
+          style={{ 
+            opacity: glareOpacity,
+            background: "radial-gradient(ellipse at 35% 30%, rgba(255,140,0,0.38) 0%, rgba(255,100,20,0.15) 40%, rgba(52,211,153,0.06) 70%, transparent 90%)"
+          }}
+        />
+
+        {/* Sharp specular highlight on top edge of lit cell */}
+        <motion.div
+          className="absolute top-0 left-0 right-0 h-[1px] pointer-events-none"
+          style={{ 
+            opacity: useTransform(glareOpacity, (g) => g * 0.95),
+            background: "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.75) 50%, transparent 95%)"
+          }}
+        />
+
+        {/* Left edge specular */}
+        <motion.div
+          className="absolute top-0 left-0 bottom-0 w-[1px] pointer-events-none"
+          style={{ 
+            opacity: useTransform(glareOpacity, (g) => g * 0.5),
+            background: "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, transparent 100%)"
+          }}
+        />
+      </motion.div>
+    </div>
   );
 }
 
-const stats = [
-  { value: 7,   suffix: "",   label: "States" },
-  { value: 25,  suffix: "yr", label: "Warranty" },
-  { value: 500, suffix: "+",  label: "Projects" },
-  { value: 48,  suffix: "hr", label: "Response" },
-];
-
+// ── Main Hero Section ──
 export function HeroSection() {
-  const [statsVisible, setStatsVisible] = useState(false);
+  const [winSize, setWinSize] = useState({ w: 1440, h: 900 });
+  const [isMounted, setIsMounted] = useState(false);
+  const isIdle = useRef(true);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  
-  const mouseXSpring = useSpring(x);
-  const mouseYSpring = useSpring(y);
+  const rawX = useMotionValue(720);
+  const rawY = useMotionValue(450);
 
-  // 3D Rotation based on mouse
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["5deg", "-5deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-5deg", "5deg"]);
+  const mouseX = useSpring(rawX, { stiffness: 80, damping: 25, mass: 0.6 });
+  const mouseY = useSpring(rawY, { stiffness: 80, damping: 25, mass: 0.6 });
 
-  // Trigger stats after headline finishes (~2.2s)
+  const flareX = useTransform(mouseX, (x) => x - winSize.w / 2);
+  const flareY = useTransform(mouseY, (y) => y - winSize.h / 2);
+
+  // Hoist cursor transforms unconditionally — hooks cannot live inside conditionals
+  const cursorX = useTransform(mouseX, (x) => x - 6);
+  const cursorY = useTransform(mouseY, (y) => y - 6);
+
   useEffect(() => {
-    const t = setTimeout(() => setStatsVisible(true), 2400);
-    return () => clearTimeout(t);
-  }, []);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    setWinSize({ w, h });
+    rawX.set(w / 2);
+    rawY.set(h / 2);
+    setIsMounted(true);
 
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    
-    const mouseX = (e.clientX - rect.left) / width - 0.5;
-    const mouseY = (e.clientY - rect.top) / height - 0.5;
-    
-    x.set(mouseX);
-    y.set(mouseY);
+    // Idle drift — light wanders when mouse is inactive
+    const startIdleDrift = () => {
+      if (!isIdle.current) return;
+      const driftX = w / 2 + (Math.random() - 0.5) * w * 0.45;
+      const driftY = h / 2 + (Math.random() - 0.5) * h * 0.45;
+      animate(rawX, driftX, { duration: 4.5, ease: "easeInOut" });
+      animate(rawY, driftY, { 
+        duration: 4.5, ease: "easeInOut",
+        onComplete: () => { if (isIdle.current) startIdleDrift(); }
+      });
+    };
+    const driftTimeout = setTimeout(startIdleDrift, 1200);
+
+    const handleResize = () => setWinSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(driftTimeout);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [rawX, rawY]);
+
+  const handleMouseMove = (e: MouseEvent) => {
+    isIdle.current = false;
+    rawX.set(e.clientX);
+    rawY.set(e.clientY);
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => { isIdle.current = true; }, 3000);
   };
 
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
+  const columns = 11;
+  const rows = 7;
 
   return (
-    <section className="relative w-full min-h-[100dvh] lg:h-[100dvh] bg-[#030704] text-white overflow-hidden flex items-center selection:bg-amber-500/30 pt-20 lg:pt-20 perspective-[2000px]">
-      
-      {/* Ambient elegant glow */}
-      <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] md:w-[50%] md:h-[50%] bg-[#1B5E20]/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none" />
-
-      {/* Dawn Light Rays */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <motion.div 
-          className="absolute top-[-20%] left-[-10%] w-[200%] h-[30%] bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent origin-top-left mix-blend-screen blur-[40px]"
-          initial={{ rotate: 30 }}
-          animate={{ rotate: [30, 40, 30] }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div 
-          className="absolute top-[-10%] left-[-5%] w-[180%] h-[25%] bg-gradient-to-r from-white/10 via-amber-400/5 to-transparent origin-top-left mix-blend-screen blur-[30px]"
-          initial={{ rotate: 20 }}
-          animate={{ rotate: [20, 25, 20] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        />
-        <motion.div 
-          className="absolute top-[-30%] left-[-20%] w-[150%] h-[40%] bg-gradient-to-r from-amber-600/5 via-transparent to-transparent origin-top-left mix-blend-screen blur-[50px]"
-          initial={{ rotate: 45 }}
-          animate={{ rotate: [45, 55, 45] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
+    <section 
+      className="relative w-full h-[100dvh] overflow-hidden bg-[#030b0f]"
+      // FIX 4: hide native cursor so it doesn't clash with the light flare
+      style={{ cursor: "none" }}
+      onMouseMove={handleMouseMove}
+    >
+      {/* ── Kinetic Solar Panel Grid ── */}
+      {/* FIX 1: No perspective on parent — each cell has its own */}
+      <div 
+        className="absolute inset-[-3vw] z-0"
+        style={{ 
+          display: "grid",
+          gridTemplateColumns: `repeat(${columns}, 1fr)`, 
+          gridTemplateRows: `repeat(${rows}, 1fr)`, 
+          gap: "3px",
+          background: "#010507", // visible gap colour — very dark, recessed look
+        }}
+      >
+        {isMounted && Array.from({ length: columns * rows }).map((_, i) => (
+          <SolarCell 
+            key={i} 
+            mouseX={mouseX} 
+            mouseY={mouseY} 
+            xIndex={i % columns} 
+            yIndex={Math.floor(i / columns)} 
+            columns={columns} 
+            rows={rows} 
+            winSize={winSize}
+          />
+        ))}
       </div>
 
-      {/* Dynamic sunlight flare that follows mouse on X-axis slightly */}
-      <motion.div 
-        className="absolute top-[-20%] right-[-10%] w-[120vw] h-[120vw] md:w-[80vw] md:h-[80vw] bg-gradient-to-bl from-amber-500/10 via-amber-700/5 to-transparent rounded-full blur-[80px] md:blur-[120px] pointer-events-none"
+      {/* Edge-only vignette — keeps center clear */}
+      <div 
+        className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          x: useTransform(x, [-0.5, 0.5], [-50, 50]),
-          y: useTransform(y, [-0.5, 0.5], [-25, 25]),
+          background: "radial-gradient(ellipse 85% 85% at 50% 50%, transparent 25%, rgba(3,11,15,0.75) 100%)"
         }}
       />
 
-      {/* ── Background Abstract Solar Blueprint ── */}
-      <motion.div 
-        className="absolute top-[10%] left-[-50vw] md:left-[-15vw] w-[150vw] h-[150vw] md:w-[100vh] md:h-[100vh] max-h-[1200px] max-w-[1200px] opacity-[0.04] pointer-events-none mix-blend-screen text-amber-50"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-      >
-        <svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          {/* Outer dotted rings */}
-          <circle cx="250" cy="250" r="240" stroke="currentColor" strokeWidth="1" strokeDasharray="4 8" />
-          <circle cx="250" cy="250" r="220" stroke="currentColor" strokeWidth="0.5" />
-          
-          {/* Axis Lines */}
-          <path d="M 250 10 L 250 490 M 10 250 L 490 250" stroke="currentColor" strokeWidth="0.5" />
-          <path d="M 80 80 L 420 420 M 80 420 L 420 80" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 4" />
-          
-          {/* Inner details */}
-          <circle cx="250" cy="250" r="160" stroke="currentColor" strokeWidth="1" strokeDasharray="1 6" />
-          <circle cx="250" cy="250" r="100" stroke="currentColor" strokeWidth="0.5" />
-          <circle cx="250" cy="250" r="60" stroke="currentColor" strokeWidth="2" strokeDasharray="10 15" />
-          <circle cx="250" cy="250" r="20" stroke="currentColor" strokeWidth="1" />
-
-          {/* Abstract Solar Cell rings */}
-          <g transform="translate(250 250)">
-            {Array.from({ length: 24 }).map((_, i) => (
-              <rect key={i} x="-8" y="-195" width="16" height="30" stroke="currentColor" strokeWidth="1" transform={`rotate(${i * 15})`} />
-            ))}
-            {Array.from({ length: 12 }).map((_, i) => (
-              <rect key={i} x="-15" y="-140" width="30" height="35" stroke="currentColor" strokeWidth="0.5" transform={`rotate(${i * 30})`} />
-            ))}
-          </g>
-        </svg>
-      </motion.div>
-
-      {/* Subtle architectural grid lines */}
-      <div className="absolute left-8 md:left-16 xl:left-24 top-0 bottom-0 w-px bg-white/[0.03] pointer-events-none" />
-      <div className="absolute right-8 md:right-16 xl:right-24 top-0 bottom-0 w-px bg-white/[0.03] pointer-events-none" />
-
-      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-12 xl:px-24 flex flex-col lg:flex-row items-center justify-between relative z-10 h-full pb-8 lg:pb-0 gap-8 lg:gap-0">
-        
-        {/* ── Left Column Text ── */}
-        <div className="w-full lg:w-[50%] flex flex-col justify-center relative z-20 pt-4 lg:pt-0">
-          
-          {/* Label */}
-          <motion.div
-            className="flex items-center gap-4 mb-4 lg:mb-12"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-          >
-            <span className="w-8 lg:w-12 h-px bg-amber-500/80" />
-            <span className="text-amber-500/90 text-[10px] lg:text-xs font-bold tracking-[0.4em] uppercase">
-              Solar EPC · Repower
-            </span>
-          </motion.div>
-
-          {/* Headline */}
-          <div className="relative -ml-1 md:-ml-2">
-            <KineticHeadline />
-          </div>
-
-          <motion.div
-            className="w-full max-w-lg mt-2 lg:mt-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 2.3 }}
-          >
-            <p className="text-white/50 text-sm sm:text-base md:text-lg font-light leading-relaxed mb-6 md:mb-8 pr-4 lg:pr-0">
-              GoGreen operates across 7 states. Every install is backed by a 25-year warranty and a strictly enforced 48-hour response commitment.
-            </p>
-
-            {/* CTAs */}
-            <div className="flex flex-row items-center gap-4 sm:gap-6">
-              <a
-                href="/get-assessment"
-                className="group relative inline-flex items-center overflow-hidden border border-white/20 bg-transparent px-6 py-3 sm:px-8 sm:py-4 font-bold tracking-[0.15em] sm:tracking-widest text-[10px] sm:text-xs uppercase text-white hover:border-white transition-colors duration-500"
-              >
-                <span className="absolute inset-0 bg-white translate-y-[101%] transition-transform duration-500 ease-[0.16,1,0.3,1] group-hover:translate-y-0" />
-                <span className="relative group-hover:text-black transition-colors duration-500 delay-75 whitespace-nowrap">Free Assessment</span>
-              </a>
-              <a
-                href="/services"
-                className="text-white/50 hover:text-white text-[10px] sm:text-xs font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase transition-colors duration-500 relative py-2 after:content-[''] after:absolute after:bottom-[2px] after:left-0 after:w-full after:h-px after:bg-white/20 after:hover:bg-white after:transition-colors whitespace-nowrap"
-              >
-                Our Services
-              </a>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* ── Right Column Image & Stats ── */}
-        <div 
-          className="w-full lg:w-[42%] h-[45vh] sm:h-[50vh] lg:h-[70vh] max-h-[800px] relative flex items-center justify-center lg:justify-end perspective-[1200px]"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+      {/* ── Multi-layer Light Rig ── FIX 2: whiter core, truer orange corona */}
+      {isMounted && (
+        <motion.div
+          className="absolute top-1/2 left-1/2 pointer-events-none z-20"
+          style={{ x: flareX, y: flareY }}
         >
-          {/* Framed Image */}
-          <motion.div 
-            className="relative w-full h-full max-w-[100%] sm:max-w-[480px] lg:max-w-[540px] overflow-hidden bg-white/[0.02] transform-style-3d origin-center"
-            initial={{ opacity: 0, clipPath: 'inset(100% 0 0 0)' }}
-            animate={{ opacity: 1, clipPath: 'inset(0% 0 0 0)' }}
-            transition={{ duration: 1.6, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
-            style={{
-              rotateX,
-              rotateY,
-              scale: 1.02 // slight bump so edges don't show
-            }}
+          {/* Bright white specular pinpoint */}
+          <div className="absolute -translate-x-1/2 -translate-y-1/2 w-[6vw] h-[6vw] max-w-[90px] max-h-[90px] rounded-full blur-[16px] bg-white/70 mix-blend-screen" />
+          {/* Tight orange-white inner corona */}
+          <div className="absolute -translate-x-1/2 -translate-y-1/2 w-[18vw] h-[18vw] max-w-[260px] max-h-[260px] rounded-full blur-[45px] bg-orange-300/60 mix-blend-screen" />
+          {/* Main amber corona */}
+          <div className="absolute -translate-x-1/2 -translate-y-1/2 w-[38vw] h-[38vw] max-w-[560px] max-h-[560px] rounded-full blur-[90px] bg-amber-500/30 mix-blend-screen" />
+          {/* Outer warm wash */}
+          <div className="absolute -translate-x-1/2 -translate-y-1/2 w-[65vw] h-[65vw] max-w-[900px] max-h-[900px] rounded-full blur-[130px] bg-amber-700/15 mix-blend-screen" />
+          {/* Diffuse emerald ambient */}
+          <div className="absolute -translate-x-1/2 -translate-y-1/2 w-[95vw] h-[95vw] max-w-[1300px] max-h-[1300px] rounded-full blur-[160px] bg-emerald-500/8 mix-blend-screen" />
+        </motion.div>
+      )}
+
+      {/* FIX 4: Custom cursor dot — replaces native cursor cleanly */}
+      {isMounted && (
+        <motion.div
+          className="absolute top-0 left-0 pointer-events-none z-50 mix-blend-difference"
+          style={{ x: cursorX, y: cursorY }}
+        >
+          <div className="w-3 h-3 rounded-full bg-white" />
+        </motion.div>
+      )}
+
+      {/* ── Content Layer ── */}
+      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
+        <div className="relative">
+          <motion.h1 
+            className="text-5xl md:text-7xl lg:text-[6.5rem] xl:text-[8rem] font-heading font-semibold text-white tracking-[-0.03em] leading-[0.95] mb-7"
+            style={{ textShadow: "0 0 60px rgba(0,0,0,0.95), 0 2px 6px rgba(0,0,0,0.9)" }}
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* Spotlight Glare */}
-            <motion.div 
-              className="absolute inset-0 z-30 pointer-events-none mix-blend-overlay opacity-0 hover:opacity-100 transition-opacity duration-300"
-              style={{
-                background: useTransform(() => {
-                  const posX = (x.get() + 0.5) * 100;
-                  const posY = (y.get() + 0.5) * 100;
-                  return `radial-gradient(circle at ${posX}% ${posY}%, rgba(255,255,255,0.15) 0%, transparent 60%)`;
-                })
-              }}
-            />
+            Solar done right.<br />
+            The first time.
+          </motion.h1>
 
-            <motion.div
-              className="w-full h-full relative"
-              initial={{ scale: 1.15 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 2.5, ease: "easeOut", delay: 0.5 }}
+          <motion.p
+            className="text-emerald-300 text-[11px] md:text-xs lg:text-sm font-bold tracking-[0.3em] uppercase mb-10"
+            style={{ textShadow: "0 0 30px rgba(0,0,0,1), 0 1px 3px rgba(0,0,0,0.9)" }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          >
+            EPC · Decommissioning · Removal & Repower · 7 States
+          </motion.p>
+
+          <motion.div
+            className="flex items-center justify-center gap-4"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <a
+              href="/get-assessment"
+              className="group relative inline-flex items-center gap-3 bg-emerald-500 text-white px-10 py-4 font-bold tracking-[0.15em] text-[11px] uppercase overflow-hidden pointer-events-auto transition-all duration-400 hover:bg-emerald-400"
+              style={{ cursor: "none", boxShadow: "0 0 40px rgba(52,211,153,0.3), 0 4px 20px rgba(0,0,0,0.5)" }}
             >
-              <Image
-                src="/images/hero_luxury_solar_8k.png"
-                alt="Luxury Solar Installation"
-                fill
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover relative z-0"
-                quality={90}
-                priority
-              />
-              
-              {/* High-Tech Viewfinder Corners (Alternative to the sheen) */}
-              <div className="absolute top-6 left-6 w-8 h-8 border-t-[1px] border-l-[1px] border-amber-500/50 pointer-events-none z-20" />
-              <div className="absolute top-6 right-6 w-8 h-8 border-t-[1px] border-r-[1px] border-amber-500/50 pointer-events-none z-20" />
-              <div className="absolute bottom-6 left-6 w-8 h-8 border-b-[1px] border-l-[1px] border-amber-500/50 pointer-events-none z-20" />
-              <div className="absolute bottom-6 right-6 w-8 h-8 border-b-[1px] border-r-[1px] border-amber-500/50 pointer-events-none z-20" />
-            </motion.div>
-
-            {/* Internal overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#030704] via-[#030704]/40 to-transparent h-[70%] lg:h-[60%] top-auto pointer-events-none" />
-            <div className="absolute inset-0 border border-white/10 pointer-events-none" />
-
-            {/* Stats carefully positioned inside the frame */}
-            <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 lg:p-12 z-10">
-              <div className="grid grid-cols-2 gap-y-6 md:gap-y-10 gap-x-4 md:gap-x-8 text-center sm:text-left">
-                {stats.map((stat, i) => (
-                  <motion.div 
-                    key={i} 
-                    className="flex flex-col gap-1 md:gap-2"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: statsVisible ? 1 : 0, y: statsVisible ? 0 : 30 }}
-                    transition={{ duration: 0.8, delay: i * 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  >
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-heading font-light text-white tracking-tight leading-none drop-shadow-lg">
-                      {statsVisible ? <Counter to={stat.value} duration={2} /> : "0"}<span className="text-amber-500 ml-[2px]">{stat.suffix}</span>
-                    </span>
-                    <span className="text-[8px] sm:text-[9px] md:text-[10px] font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase text-white/60 drop-shadow-md">
-                      {stat.label}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+              <span className="relative z-10">Talk to Our Team</span>
+              <span className="relative z-10 text-base leading-none group-hover:translate-x-1.5 transition-transform duration-300">→</span>
+            </a>
+            <a
+              href="/services"
+              className="inline-flex items-center gap-2 border border-white/20 text-white/70 hover:text-white hover:border-white/50 px-8 py-4 font-bold tracking-[0.15em] text-[11px] uppercase pointer-events-auto transition-all duration-300 backdrop-blur-sm"
+              style={{ cursor: "none" }}
+            >
+              Our Services
+            </a>
           </motion.div>
-          
-          {/* Decorative vertical badge */}
-          <div className="hidden xl:flex absolute top-1/2 -right-16 -translate-y-1/2 flex-col items-center gap-6 -rotate-90 origin-center text-white/20 select-none">
-            <span className="text-[9px] tracking-[0.5em] uppercase font-bold">Est 2026</span>
-            <div className="w-16 h-px bg-white/20" />
-          </div>
-
         </div>
       </div>
+
+      {/* ── Bottom Stats Strip ── */}
+      <motion.div 
+        className="absolute bottom-0 left-0 w-full z-40 pointer-events-none"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.9, delay: 0.6 }}
+      >
+        <div className="bg-black/55 backdrop-blur-lg border-t border-white/[0.07]">
+          <div className="max-w-5xl mx-auto flex flex-wrap justify-center items-center gap-x-8 md:gap-x-16 gap-y-3 px-4 py-4 md:py-5">
+            {[
+              { value: "500+", label: "Projects" },
+              { value: "25yr", label: "Warranty" },
+              { value: "48hr", label: "Response" },
+              { value: "7",    label: "States" },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-2.5">
+                <span className="text-white text-sm md:text-base font-bold tracking-tight">{stat.value}</span>
+                <span className="text-white/40 text-[10px] tracking-[0.2em] uppercase font-medium">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
     </section>
   );
 }
