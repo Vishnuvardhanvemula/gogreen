@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
+import Image from "next/image";
 
 const services = [
   { label: "Solar EPC", href: "/services/solar-epc", desc: "New installations, end-to-end" },
@@ -26,7 +27,6 @@ export function Navbar() {
 
   const backgroundColor = useTransform(scrollY, [0, 60], ["rgba(13, 31, 15, 0)", "rgba(255, 255, 255, 1)"]);
   const textColor = useTransform(scrollY, [0, 60], ["rgba(255, 255, 255, 1)", "rgba(13, 31, 15, 1)"]);
-  const logoColor = useTransform(scrollY, [0, 60], ["rgba(255, 255, 255, 1)", "rgba(27, 94, 32, 1)"]);
   const borderColor = useTransform(scrollY, [0, 60], ["rgba(255,255,255,0)", "rgba(0,0,0,0.06)"]);
 
   useEffect(() => {
@@ -63,12 +63,16 @@ export function Navbar() {
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         {/* Logo */}
-        <motion.a
-          href="/"
-          className="font-heading font-bold text-xl tracking-[0.15em] uppercase shrink-0"
-          style={{ color: logoColor }}
-        >
-          GoGreen
+        <motion.a href="/" className="shrink-0 flex items-center">
+          <Image
+            src="/images/GoGreen_Logo-removebg.png"
+            alt="GoGreen logo"
+            width={220}
+            height={56}
+            priority
+            unoptimized
+            className={`h-8 md:h-10 w-auto object-contain transition-all duration-200 ${isScrolled ? '' : 'brightness-0 invert'}`}
+          />
         </motion.a>
 
         {/* Desktop Links */}
