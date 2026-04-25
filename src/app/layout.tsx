@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter, Outfit, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -15,6 +15,11 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "GoGreen | Solar Done Right.",
   description: "High-end luxury residential solar installations.",
@@ -26,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} h-full antialiased cursor-default sm:cursor-none`}>
+    <html lang="en" className={`${inter.variable} ${outfit.variable} ${playfair.variable} h-full antialiased cursor-default sm:cursor-none`}>
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground overflow-x-hidden">
         <CustomCursor />
         <Navbar />

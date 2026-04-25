@@ -3,6 +3,7 @@
 @theme {
   --font-sans: var(--font-inter);
   --font-heading: var(--font-outfit);
+  --font-serif: var(--font-playfair);
 
   --color-background: #ffffff;
   --color-foreground: #0f172a;
