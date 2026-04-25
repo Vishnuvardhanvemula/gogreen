@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
@@ -13,7 +13,7 @@ export function HeroSection() {
   }, []);
 
   // Sophisticated staggered text animation variants
-  const containerVars = {
+  const containerVars: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -21,9 +21,9 @@ export function HeroSection() {
     }
   };
 
-  const itemVars = {
+  const itemVars: Variants = {
     hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 1.2, ease: "easeOut" } }
   };
 
   return (
@@ -63,7 +63,7 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row gap-8 items-start sm:items-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 1.2, delay: 0.6, ease: "easeOut" }}
         >
           {/* Bespoke CTA Button */}
           <a 
