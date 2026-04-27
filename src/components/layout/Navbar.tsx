@@ -77,7 +77,7 @@ export function Navbar() {
 
         {/* Desktop Links */}
         <motion.div
-          className="hidden lg:flex items-center gap-10 font-medium text-[11px] tracking-[0.15em] uppercase"
+          className="hidden lg:flex items-center gap-10 font-sans font-semibold text-[11px] tracking-[0.15em] uppercase"
           style={{ color: textColor }}
         >
           {/* Services dropdown */}
