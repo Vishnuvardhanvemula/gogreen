@@ -18,9 +18,9 @@ export function Footer() {
           
           <div className="flex flex-col gap-4">
             <h4 className="text-xs font-bold text-amber-500 tracking-[0.2em] uppercase mb-2">Services</h4>
-            <a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Solar EPC</a>
-            <a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Decommissioning</a>
-            <a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Removal & Repower</a>
+            <a href="/services/solar-epc" className="text-white/70 hover:text-white transition-colors text-sm">Solar EPC</a>
+            <a href="/services/decommissioning" className="text-white/70 hover:text-white transition-colors text-sm">Decommissioning</a>
+            <a href="/services/removal-repower" className="text-white/70 hover:text-white transition-colors text-sm">Removal & Repower</a>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -49,8 +49,8 @@ export function Footer() {
           © {new Date().getFullYear()} GoGreen Energy. All rights reserved.
         </p>
         <div className="flex gap-6">
-          <a href="#" className="text-white/40 hover:text-white/70 text-xs transition-colors">Privacy Policy</a>
-          <a href="#" className="text-white/40 hover:text-white/70 text-xs transition-colors">Terms of Service</a>
+          <a href="/privacy-policy" className="text-white/40 hover:text-white/70 text-xs transition-colors">Privacy Policy</a>
+          <a href="/terms-of-service" className="text-white/40 hover:text-white/70 text-xs transition-colors">Terms of Service</a>
         </div>
       </div>
     </footer>

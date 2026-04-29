@@ -2,7 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 
-export function CTACloserSection() {
+export function CTACloser() {
   return (
     <section className="relative w-full py-16 md:py-32 lg:py-48 px-6 bg-[#0D1F0F]">
       <div className="max-w-6xl mx-auto w-full flex flex-col lg:flex-row gap-12 sm:gap-16 lg:gap-24">
