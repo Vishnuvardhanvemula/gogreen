@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowRight, MoveDown } from "lucide-react";
+import { SolarPanelGraphic } from "@/components/ui/SolarPanelGraphic";
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -75,33 +76,8 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A2A1A] via-transparent to-[#0A2A1A] pointer-events-none" />
       </motion.div>
 
-      {/* SOLAR TRACKER ARRAY (Technical Geometric Element) */}
-      <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] pointer-events-none z-0 opacity-30 mix-blend-screen">
-        {/* Outer Ring */}
-        <motion.div 
-          className="absolute inset-0 border-[1px] border-[#D4AF37]/30 rounded-full border-dashed"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 120, ease: "linear", repeat: Infinity }}
-        >
-          <div className="absolute top-0 left-1/2 w-2 h-2 bg-[#D4AF37] rounded-full -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_#D4AF37]" />
-        </motion.div>
-        
-        {/* Inner Ring */}
-        <motion.div 
-          className="absolute inset-16 border-[1px] border-white/10 rounded-full"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 180, ease: "linear", repeat: Infinity }}
-        >
-          <div className="absolute bottom-0 left-1/2 w-1.5 h-1.5 bg-white rounded-full -translate-x-1/2 translate-y-1/2" />
-        </motion.div>
-
-        {/* Center Target */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
-           <div className="w-px h-32 bg-[#D4AF37]/20 absolute" />
-           <div className="w-32 h-px bg-[#D4AF37]/20 absolute" />
-           <div className="w-4 h-4 border border-[#D4AF37]/50 rounded-full absolute" />
-        </div>
-      </div>
+      {/* LIGHTWEIGHT 2D SOLAR GRAPHIC */}
+      <SolarPanelGraphic />
 
       {/* FOREGROUND CONTENT (Masterpiece Editorial Grid) */}
       <div className="relative z-20 w-full max-w-[95vw] lg:max-w-[90vw] mx-auto px-4 md:px-0 flex flex-col mt-auto pb-4">
