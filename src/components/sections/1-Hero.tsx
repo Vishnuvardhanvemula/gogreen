@@ -1,158 +1,262 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import Image from "next/image";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-import { ExplodedSolarArray } from "@/components/ui/ExplodedSolarArray";
+import Image from "next/image";
+
+// The CSS-only solar cell grid
+function SolarCellGrid() {
+  return (
+    <div className="w-full h-full relative overflow-hidden bg-[#040a0e]">
+      <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(90deg, rgba(255,255,255,0.12) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.12) 1px, transparent 1px)`, backgroundSize: 'calc(100% / 6) calc(100% / 10)' }} />
+      <div className="absolute inset-0 mix-blend-screen opacity-50" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent calc(20% - 1px), rgba(255,255,255,0.5) calc(20% - 1px), rgba(255,255,255,0.5) 20%)', backgroundSize: 'calc(100% / 6) 100%' }} />
+      <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.15) 3px, rgba(255,255,255,0.15) 4px)', backgroundSize: '100% 4px' }} />
+      <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle 2px at center, white 70%, transparent 70%)`, backgroundSize: 'calc(100% / 6) calc(100% / 10)', backgroundPosition: '0 0' }} />
+    </div>
+  );
+}
+
+// Removed HudSpec component for cleaner aesthetic
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isMounted, setIsMounted] = useState(false);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 80, damping: 25, mass: 0.5 });
+
+  // Mouse tracking for interactive flashlight
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      setMousePosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    setMounted(true);
   }, []);
 
-  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
-  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "80%"]);
-  const arrayY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    mouseX.set(e.clientX / window.innerWidth);
+    mouseY.set(e.clientY / window.innerHeight);
+  }, [mouseX, mouseY]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      mouseX.set(e.touches[0].clientX / window.innerWidth);
+      mouseY.set(e.touches[0].clientY / window.innerHeight);
+    }
+  }, [mouseX, mouseY]);
+
+  // ── PHASE 1: ASSEMBLY (0.0 to 0.4) ──
+  const rotateX = useTransform(smoothProgress, [0, 0.4], [65, 0]);
+  const rotateZ = useTransform(smoothProgress, [0, 0.4], [-40, 0]);
+  const scale = useTransform(smoothProgress, [0, 0.4], [0.8, 1]);
+
+  const zGlass = useTransform(smoothProgress, [0, 0.4], [350, 4]);
+  const zCells = useTransform(smoothProgress, [0, 0.4], [180, 2]);
+  const zInverter = useTransform(smoothProgress, [0, 0.4], [-180, -2]);
+  const zRacking = useTransform(smoothProgress, [0, 0.4], [-350, -4]);
+
+  const introOpacity = useTransform(smoothProgress, [0, 0.15], [1, 0]);
+  const introY = useTransform(smoothProgress, [0, 0.15], [0, -40]);
+
+  // Dynamic Glare sweeping across glass
+  const glareX = useTransform(smoothProgress, [0, 0.4], ["-200%", "200%"]);
+
+  // ── PHASE 2: TRANSLATE & REVEAL (0.5 to 0.9) ──
+  const assemblyX = useTransform(smoothProgress, [0.5, 0.9], ["0%", "28vw"]);
+  const assemblyYMobile = useTransform(smoothProgress, [0, 0.5, 0.9], ["-8vh", "-8vh", "-20vh"]);
+  const assemblyYDesktop = useTransform(smoothProgress, [0.5, 0.9], [0, 40]);
+  
+  const specOpacity = useTransform(smoothProgress, [0.6, 0.9], [0, 1]);
+  const specX = useTransform(smoothProgress, [0.6, 0.9], [-60, 0]);
+
+  // Background and Lighting fading
+  const lightOpacity = useTransform(smoothProgress, [0, 0.4, 0.9], [0.03, 0.15, 0.08]);
+  const bgImageOpacity = useTransform(smoothProgress, [0.5, 0.9], [0.05, 0.25]);
+
+  // Flashlight transforms (using vw/vh to avoid window SSR issues)
+  const lightX = useTransform(mouseX, [0, 1], ["0vw", "100vw"]);
+  const lightY = useTransform(mouseY, [0, 1], ["0vh", "100vh"]);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative w-full h-[100dvh] min-h-[750px] bg-[#06140b] overflow-hidden flex items-center"
-    >
-      {/* Dynamic Background Noise & Lighting */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
-           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")', backgroundRepeat: 'repeat' }} />
-           
-      {isMounted && (
-        <div
-          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-1000 opacity-0 group-hover:opacity-100 mix-blend-screen"
-          style={{
-            background: `radial-gradient(800px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(212, 175, 55, 0.04), transparent 40%)`
-          }}
-        />
-      )}
-
-      {/* Grid Lines Overlay */}
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
-        <div className="absolute left-[10%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/10 to-white/0" />
-        <div className="absolute left-[50%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/5 to-white/0" />
-        <div className="absolute right-[10%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/10 to-white/0" />
-        <div className="absolute top-[85%] left-0 right-0 h-[1px] bg-gradient-to-r from-white/0 via-white/10 to-white/0" />
-      </div>
-
-      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, opacity: bgOpacity }}>
-        <motion.div
-          className="absolute inset-0 origin-center mix-blend-luminosity opacity-[0.07]"
+    <section ref={containerRef} className="relative w-full h-[400vh] bg-[#020503]">
+      
+      {/* Sticky Viewport */}
+      <div 
+        className="sticky top-0 h-[100dvh] w-full overflow-hidden flex flex-col md:flex-row items-center justify-center pt-0 lg:pt-28 perspective-[2500px]"
+        onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
+      >
+        
+        {/* ── BACKGROUND AMBIENCE (Breathing Ken Burns) ── */}
+        <motion.div 
+          className="absolute inset-0 z-0 pointer-events-none mix-blend-luminosity"
+          style={{ opacity: bgImageOpacity }}
           animate={{ scale: [1, 1.05] }}
-          transition={{ duration: 40, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
+          transition={{ duration: 40, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
         >
-          <Image
-            src="/images/solar_hero_modern_house_1776093453629.png"
-            alt="Solar Installation"
+          <Image 
+            src="/premium_estate_bg.png"
+            alt="Premium Estate Background"
             fill
             sizes="100vw"
             className="object-cover object-center"
-            priority
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#020503] via-[#020503]/70 to-[#020503]" />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#040e08] via-[#06140b]/95 to-transparent" />
-      </motion.div>
 
-      <div className="relative z-20 w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 flex flex-col md:flex-row items-center justify-between h-full">
-        
-        {/* Left Content - Typography */}
+        {/* Noise Texture */}
+        <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
+
+        {/* ── INTERACTIVE FLASHLIGHT ── */}
         <motion.div 
-          style={{ y: textY }}
-          className="w-full md:w-[50%] flex flex-col items-start pt-32 md:pt-0 z-30"
-        >
-          {/* Micro-label */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="flex items-center gap-4 mb-8"
-          >
-            <div className="w-8 h-[1px] bg-[#D4AF37]" />
-            <span className="font-sans text-[10px] tracking-[0.25em] text-[#D4AF37] uppercase font-bold">
-              [ System 01 // Active ]
-            </span>
-          </motion.div>
+          className="absolute top-0 left-0 w-[1200px] h-[1200px] bg-[#D4AF37] blur-[180px] rounded-full pointer-events-none mix-blend-screen z-0 -translate-x-1/2 -translate-y-1/2"
+          style={{ 
+            opacity: mounted ? lightOpacity : 0, 
+            x: lightX,
+            y: lightY
+          }}
+        />
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading font-extrabold text-white text-5xl md:text-7xl lg:text-[6.5rem] leading-[1.05] tracking-tight mb-8"
-          >
-            Engineered <br />
-            <span className="text-white/40">to Outlast.</span>
+        {/* ── INTRO TEXT ── */}
+        <motion.div 
+          className="absolute top-24 lg:top-1/2 lg:-translate-y-1/2 lg:left-24 text-center lg:text-left z-20 pointer-events-none flex flex-col items-center lg:items-start w-full lg:w-auto px-6"
+          style={{ opacity: introOpacity, y: introY }}
+        >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }} className="flex items-center gap-4 mb-4 lg:mb-6">
+            <div className="w-12 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent lg:hidden" />
+            <p className="font-mono text-[9px] md:text-[10px] tracking-[0.4em] text-[#D4AF37] uppercase font-semibold">Bespoke Energy Architecture</p>
+            <div className="w-12 h-[1px] bg-gradient-to-r from-[#D4AF37] via-[#D4AF37] to-transparent" />
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.4 }} className="font-heading font-black text-white text-4xl md:text-5xl lg:text-6xl tracking-[-0.03em] leading-none mb-8">
+            Scroll to<br className="hidden lg:block"/> Assemble
           </motion.h1>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="font-sans text-white/40 text-sm md:text-base max-w-sm leading-relaxed mb-12"
-          >
-            Utility-grade performance. Residential scale. Meticulously engineered for luxury estates.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <a
-              href="#contact"
-              className="group relative flex items-center gap-6"
-            >
-              <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 hover:border-[#D4AF37] transition-all duration-500 bg-white/5 backdrop-blur-sm group-hover:scale-110">
-                <ArrowUpRight className="w-5 h-5 text-white group-hover:text-[#D4AF37] transition-colors duration-500" />
-              </div>
-              <span className="font-sans text-xs tracking-[0.2em] text-white uppercase font-semibold group-hover:text-[#D4AF37] transition-colors duration-500">
-                Initiate Project
-              </span>
-            </a>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 1 }} className="relative flex flex-col items-center lg:items-start gap-3">
+            <span className="font-mono text-[8px] tracking-[0.3em] text-white/30 uppercase">Engage</span>
+            <div className="w-[1px] h-12 bg-white/10 relative overflow-hidden ml-0 lg:ml-4">
+              <motion.div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-transparent to-[#D4AF37]" animate={{ y: ["-100%", "200%"] }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
+            </div>
           </motion.div>
         </motion.div>
 
-        {/* Right Content - 3D Array */}
+        {/* ── SPEC TEXT (Left side) ── */}
         <motion.div 
-          style={{ y: arrayY }}
-          className="absolute inset-0 md:relative w-full md:w-[65%] h-full flex items-center md:items-center justify-center md:justify-end pointer-events-none md:translate-x-[15%] lg:translate-x-[20%]"
+          className="absolute left-6 md:left-12 lg:left-24 top-1/2 -translate-y-1/2 w-full max-w-lg z-20 pointer-events-none hidden md:flex flex-col"
+          style={{ opacity: specOpacity, x: specX }}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[150%] md:w-[120%] lg:w-[130%] h-[70vh] md:h-[120vh] transform md:scale-110 lg:scale-125 transform-origin-center pointer-events-auto opacity-30 md:opacity-100 translate-y-[20%] md:translate-y-0"
-          >
-            <ExplodedSolarArray />
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-8 h-[1px] bg-[#D4AF37]" />
+            <span className="font-mono text-[10px] tracking-[0.3em] text-[#D4AF37] uppercase">Utility-Grade Luxury</span>
+          </div>
+          <h2 className="font-heading font-black text-white text-5xl lg:text-6xl leading-[0.95] tracking-tight mb-6 drop-shadow-2xl">
+            Architected<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">For Autonomy.</span>
+          </h2>
+          <p className="font-sans text-white/50 text-sm lg:text-base leading-relaxed mb-10 max-w-sm font-light">
+            Utility-grade power in a precision-machined 35mm profile. Zero visible conduits. Zero compromise.
+          </p>
+          <div className="flex items-center gap-10 mb-12 border-l border-white/10 pl-6 backdrop-blur-sm bg-white/[0.01] py-4 rounded-r-xl">
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-white/40 uppercase mb-1">Peak Yield</p>
+              <p className="font-heading font-bold text-white text-2xl tracking-tight">420W MAX</p>
+            </div>
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-white/40 uppercase mb-1">Cell Architecture</p>
+              <p className="font-heading font-bold text-white text-2xl tracking-tight">N-Type TOPCon</p>
+            </div>
+          </div>
+          <a href="#contact" className="pointer-events-auto group relative flex items-center justify-between w-[260px] p-4 rounded-full border border-white/20 bg-white/5 hover:border-[#D4AF37] transition-all duration-500 overflow-hidden backdrop-blur-md">
+            <div className="absolute inset-0 bg-[#D4AF37] translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]" />
+            <span className="relative z-10 font-mono text-[10px] tracking-[0.2em] text-white uppercase font-bold group-hover:text-[#020503] transition-colors ml-4">Commission Estate</span>
+            <div className="relative z-10 w-10 h-10 rounded-full bg-white/10 group-hover:bg-[#020503]/20 flex items-center justify-center transition-colors">
+              <ArrowUpRight className="w-4 h-4 text-white group-hover:text-[#020503]" />
+            </div>
+          </a>
+        </motion.div>
+
+        {/* ── THE 3D ASSEMBLY ── */}
+        <motion.div 
+          className="relative w-[280px] h-[420px] md:w-[360px] md:h-[540px] lg:w-[420px] lg:h-[630px] transform-style-3d z-10 hidden md:block drop-shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+          style={{ rotateX, rotateZ, scale, x: assemblyX }}
+        >
+          {/* Layer 1: Racking */}
+          <motion.div style={{ z: zRacking }} className="absolute inset-0 rounded-lg transform-style-3d shadow-2xl">
+            <div className="absolute top-[15%] left-[-5%] w-[110%] h-[20px] rounded-sm bg-gradient-to-b from-[#888] via-[#eee] to-[#444] shadow-lg" />
+            <div className="absolute top-[85%] left-[-5%] w-[110%] h-[20px] rounded-sm bg-gradient-to-b from-[#888] via-[#eee] to-[#444] shadow-lg" />
+            <div className="absolute -bottom-20 left-0 w-full h-[40px] bg-black/60 blur-xl rounded-[100%]" />
+          </motion.div>
+
+          {/* Layer 2: Microinverter */}
+          <motion.div style={{ z: zInverter }} className="absolute inset-0 flex items-center justify-center pointer-events-none transform-style-3d">
+            <div className="w-[80px] h-[100px] bg-[#111] border border-white/20 rounded-lg shadow-2xl relative overflow-hidden backdrop-blur-md">
+              <div className="absolute inset-x-0 bottom-0 h-1/2 flex justify-evenly px-2">
+                {[...Array(5)].map((_, i) => <div key={i} className="w-[3px] h-full bg-gradient-to-b from-[#444] to-[#222] rounded-t-sm" />)}
+              </div>
+              <div className="absolute top-3 right-3 w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.9)] animate-pulse" />
+            </div>
+          </motion.div>
+
+          {/* Layer 3: Backsheet & Frame */}
+          <motion.div style={{ z: 0 }} className="absolute inset-0 bg-[#f0f0f0] border-[8px] border-[#161616] rounded-xl shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden transform-style-3d" />
+
+          {/* Layer 4: Solar Cells */}
+          <motion.div style={{ z: zCells }} className="absolute inset-[10px] rounded-sm shadow-inner overflow-hidden transform-style-3d">
+            <SolarCellGrid />
+          </motion.div>
+
+          {/* Layer 5: Glass Reflection with Parallax Glare */}
+          <motion.div style={{ z: zGlass }} className="absolute inset-0 rounded-xl border border-white/30 overflow-hidden transform-style-3d bg-white/[0.04]">
+            <motion.div 
+              className="absolute top-0 w-[150%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-30deg]" 
+              style={{ x: glareX }}
+            />
+          </motion.div>
+        </motion.div>
+
+        {/* Mobile version of spec text */}
+        <motion.div 
+          className="absolute bottom-12 left-6 right-6 md:hidden z-20 flex flex-col items-center text-center pointer-events-none"
+          style={{ opacity: specOpacity }}
+        >
+          <h2 className="font-heading font-black text-white text-4xl leading-[1] tracking-tight mb-3">
+            Architected For Autonomy.
+          </h2>
+          <p className="font-sans text-white/50 text-xs leading-relaxed mb-6 font-light max-w-[260px]">
+            Utility-grade power in a 35mm profile. Zero compromise.
+          </p>
+          <a href="#contact" className="pointer-events-auto bg-[#D4AF37] text-[#020503] rounded-full font-mono text-[10px] tracking-[0.2em] uppercase font-bold px-8 py-4 w-full shadow-[0_0_40px_rgba(212,175,55,0.3)]">
+            Commission Estate
+          </a>
+        </motion.div>
+
+        {/* Mobile Assembly */}
+        <motion.div 
+          className="relative w-[230px] h-[345px] transform-style-3d z-10 md:hidden drop-shadow-2xl"
+          style={{ rotateX, rotateZ, scale, y: assemblyYMobile }}
+        >
+          <motion.div style={{ z: zRacking }} className="absolute inset-0 rounded-lg transform-style-3d shadow-2xl">
+            <div className="absolute top-[15%] left-[-5%] w-[110%] h-[20px] rounded-sm bg-gradient-to-b from-[#888] via-[#eee] to-[#444]" />
+            <div className="absolute top-[85%] left-[-5%] w-[110%] h-[20px] rounded-sm bg-gradient-to-b from-[#888] via-[#eee] to-[#444]" />
+          </motion.div>
+          <motion.div style={{ z: zInverter }} className="absolute inset-0 flex items-center justify-center pointer-events-none transform-style-3d">
+            <div className="w-[60px] h-[80px] bg-[#111] border border-white/20 rounded-md shadow-2xl relative">
+              <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            </div>
+          </motion.div>
+          <motion.div style={{ z: 0 }} className="absolute inset-0 bg-[#f0f0f0] border-[6px] border-[#161616] rounded-xl shadow-2xl overflow-hidden transform-style-3d" />
+          <motion.div style={{ z: zCells }} className="absolute inset-[8px] rounded-sm shadow-inner overflow-hidden transform-style-3d">
+            <SolarCellGrid />
+          </motion.div>
+          <motion.div style={{ z: zGlass }} className="absolute inset-0 rounded-xl border border-white/20 overflow-hidden transform-style-3d bg-white/[0.04]">
+            <motion.div className="absolute top-0 w-[150%] h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-30deg]" style={{ x: glareX }} />
           </motion.div>
         </motion.div>
 
       </div>
-
-      {/* Bottom Coordinates */}
-      <div className="absolute bottom-8 left-6 md:left-12 lg:left-24 z-20 flex flex-col gap-1">
-        <span className="font-sans text-[9px] tracking-[0.3em] text-white/30 uppercase">LAT: 34.0522° N</span>
-        <span className="font-sans text-[9px] tracking-[0.3em] text-white/30 uppercase">LNG: 118.2437° W</span>
-      </div>
-
     </section>
   );
 }
