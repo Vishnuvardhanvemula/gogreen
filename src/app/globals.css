@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans: var(--font-inter);
-  --font-heading: var(--font-outfit);
+  --font-heading: var(--font-jakarta);
   --font-serif: var(--font-playfair);
 
   --color-background: #ffffff;
@@ -52,3 +52,41 @@ body {
   background: #94a3b8;
 }
 
+/* Hero Clipping Mask Gradient Animation */
+.hero-gradient-text {
+  background-image: linear-gradient(
+    135deg,
+    #D4AF37 0%,
+    #F5E6A3 15%,
+    #D4AF37 30%,
+    #1B5E20 45%,
+    #2E7D32 55%,
+    #D4AF37 70%,
+    #C9A227 85%,
+    #D4AF37 100%
+  );
+  background-size: 300% 300%;
+  animation: hero-gradient-shift 8s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes hero-gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+}
+
+@keyframes glass-flare {
+  0%, 100% { transform: translateX(-50%) skewX(-20deg); }
+  50% { transform: translateX(150%) skewX(-20deg); }
+}

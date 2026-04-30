@@ -1,10 +1,10 @@
 "use client";
 
-import { motion, useScroll, useTransform, Variants } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
-import { ArrowRight, MoveDown } from "lucide-react";
-import { SolarPanelGraphic } from "@/components/ui/SolarPanelGraphic";
+import { ArrowUpRight } from "lucide-react";
+import { ExplodedSolarArray } from "@/components/ui/ExplodedSolarArray";
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,153 +16,143 @@ export function HeroSection() {
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      setMousePosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      });
+      setMousePosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     };
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
 
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  const textVars: Variants = {
-    hidden: { opacity: 0, y: 40 },
-    show: { opacity: 1, y: 0, transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
-  };
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "40%"]);
+  const bgOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "80%"]);
+  const arrayY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   return (
-    <section ref={containerRef} className="relative w-full h-[100dvh] min-h-[700px] bg-[#0A2A1A] overflow-hidden flex flex-col justify-end pb-8 lg:pb-16 group/hero">
-      
-      {/* MAGNETIC SPOTLIGHT */}
+    <section
+      ref={containerRef}
+      className="relative w-full h-[100dvh] min-h-[750px] bg-[#06140b] overflow-hidden flex items-center"
+    >
+      {/* Dynamic Background Noise & Lighting */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
+           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")', backgroundRepeat: 'repeat' }} />
+           
       {isMounted && (
-        <div 
-          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-500 opacity-0 group-hover/hero:opacity-100"
+        <div
+          className="absolute inset-0 pointer-events-none z-10 transition-opacity duration-1000 opacity-0 group-hover:opacity-100 mix-blend-screen"
           style={{
-            background: `radial-gradient(800px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(212, 175, 55, 0.08), transparent 40%)`
+            background: `radial-gradient(800px circle at ${mousePosition.x}px ${mousePosition.y}px, rgba(212, 175, 55, 0.04), transparent 40%)`
           }}
         />
       )}
 
-      {/* FULL BLEED BACKGROUND */}
-      <motion.div 
-        className="absolute inset-0 z-0"
-        style={{ y, opacity }}
-      >
+      {/* Grid Lines Overlay */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-20">
+        <div className="absolute left-[10%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/10 to-white/0" />
+        <div className="absolute left-[50%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/5 to-white/0" />
+        <div className="absolute right-[10%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-white/0 via-white/10 to-white/0" />
+        <div className="absolute top-[85%] left-0 right-0 h-[1px] bg-gradient-to-r from-white/0 via-white/10 to-white/0" />
+      </div>
+
+      <motion.div className="absolute inset-0 z-0" style={{ y: bgY, opacity: bgOpacity }}>
         <motion.div
-          className="absolute inset-0 origin-center mix-blend-luminosity opacity-40"
+          className="absolute inset-0 origin-center mix-blend-luminosity opacity-[0.07]"
           animate={{ scale: [1, 1.05] }}
           transition={{ duration: 40, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
         >
-          <Image 
+          <Image
             src="/images/solar_hero_modern_house_1776093453629.png"
-            alt="Tier-1 Solar Installation"
+            alt="Solar Installation"
             fill
             sizes="100vw"
             className="object-cover object-center"
             priority
           />
         </motion.div>
-        
-        {/* Deep Green & Gold Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A2A1A] via-[#0A2A1A]/80 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0A2A1A] via-transparent to-[#0A2A1A] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#040e08] via-[#06140b]/95 to-transparent" />
       </motion.div>
 
-      {/* LIGHTWEIGHT 2D SOLAR GRAPHIC */}
-      <SolarPanelGraphic />
-
-      {/* FOREGROUND CONTENT (Masterpiece Editorial Grid) */}
-      <div className="relative z-20 w-full max-w-[95vw] lg:max-w-[90vw] mx-auto px-4 md:px-0 flex flex-col mt-auto pb-4">
+      <div className="relative z-20 w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 flex flex-col md:flex-row items-center justify-between h-full">
         
-        <motion.div
-          initial="hidden"
-          animate="show"
-          transition={{ staggerChildren: 0.2, delayChildren: 0.3 }}
-          className="grid grid-cols-12 gap-x-4 md:gap-x-8 gap-y-8 lg:gap-y-12 items-end w-full mb-10 lg:mb-16"
+        {/* Left Content - Typography */}
+        <motion.div 
+          style={{ y: textY }}
+          className="w-full md:w-[50%] flex flex-col items-start pt-32 md:pt-0 z-30"
         >
-          {/* Left Column: The Anchor Typography */}
-          <div className="col-span-12 lg:col-span-8 xl:col-span-9 flex flex-col items-start text-left">
-            
-            {/* Precision Eyebrow */}
-            <motion.div variants={textVars} className="flex items-center gap-4 mb-6 lg:mb-8">
-              <div className="h-[1px] w-12 bg-[#D4AF37]" />
-              <p className="text-[#D4AF37] font-sans tracking-[0.4em] text-[9px] md:text-[11px] uppercase font-bold">
-                Tier-1 Operations
-              </p>
-            </motion.div>
-            
-            {/* The Brand Anchor */}
-            <motion.h1 
-              variants={textVars}
-              className="text-white drop-shadow-2xl flex flex-col w-full"
-            >
-              <span className="block font-heading font-semibold text-6xl md:text-8xl lg:text-[7.5rem] xl:text-[8.5rem] leading-[0.85] tracking-tighter uppercase drop-shadow-lg">
-                GO GREEN.
-              </span>
-              <span className="block font-serif font-light italic text-white/90 text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-[1.1] tracking-tight mt-3 md:mt-4">
-                Solar, done right.
-              </span>
-            </motion.h1>
-          </div>
-
-          {/* Right Column: Tucked Paragraph */}
-          <motion.div 
-            variants={textVars}
-            className="col-span-12 md:col-span-10 lg:col-span-4 xl:col-span-3 flex flex-col lg:pb-3"
+          {/* Micro-label */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="flex items-center gap-4 mb-8"
           >
-            <div className="border-l border-white/10 pl-6 md:pl-8 py-2">
-              <p className="text-[#6B8E70] font-sans text-sm md:text-base leading-relaxed font-light group-hover/hero:text-white/80 transition-colors duration-500">
-                Flawless aesthetics engineered for absolute power. We design, install, and maintain premium solar energy systems that seamlessly integrate with high-end architecture.
-              </p>
-            </div>
+            <div className="w-8 h-[1px] bg-[#D4AF37]" />
+            <span className="font-sans text-[10px] tracking-[0.25em] text-[#D4AF37] uppercase font-bold">
+              [ System 01 // Active ]
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="font-heading font-extrabold text-white text-5xl md:text-7xl lg:text-[6.5rem] leading-[1.05] tracking-tight mb-8"
+          >
+            Engineered <br />
+            <span className="text-white/40">to Outlast.</span>
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="font-sans text-white/40 text-sm md:text-base max-w-sm leading-relaxed mb-12"
+          >
+            Utility-grade performance. Residential scale. Meticulously engineered for luxury estates.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <a
+              href="#contact"
+              className="group relative flex items-center gap-6"
+            >
+              <div className="flex items-center justify-center w-14 h-14 rounded-full border border-white/20 hover:border-[#D4AF37] transition-all duration-500 bg-white/5 backdrop-blur-sm group-hover:scale-110">
+                <ArrowUpRight className="w-5 h-5 text-white group-hover:text-[#D4AF37] transition-colors duration-500" />
+              </div>
+              <span className="font-sans text-xs tracking-[0.2em] text-white uppercase font-semibold group-hover:text-[#D4AF37] transition-colors duration-500">
+                Initiate Project
+              </span>
+            </a>
           </motion.div>
         </motion.div>
 
-        {/* CTA & Metrics Bar */}
+        {/* Right Content - 3D Array */}
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full grid grid-cols-1 md:grid-cols-12 gap-0 bg-[#0A2A1A]/80 backdrop-blur-xl border border-white/5 rounded-2xl md:rounded-full p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group/bar"
+          style={{ y: arrayY }}
+          className="absolute inset-0 md:relative w-full md:w-[65%] h-full flex items-center md:items-center justify-center md:justify-end pointer-events-none md:translate-x-[15%] lg:translate-x-[20%]"
         >
-          {/* Subtle gold gradient shine inside the bar */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#D4AF37]/5 to-transparent -translate-x-full group-hover/bar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
-
-          {/* CTA */}
-          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex items-center justify-center md:justify-start md:border-r border-white/5 md:pr-8 md:pl-4 relative z-10 mb-6 md:mb-0">
-            <a 
-              href="#contact" 
-              className="group relative flex items-center justify-between gap-4 px-8 py-4 md:py-3 bg-[#1B5E20] text-white font-sans text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold overflow-hidden rounded-full w-full hover:scale-105 transition-transform duration-500 border border-white/10"
-            >
-              <span className="relative z-10 group-hover:text-[#0A2A1A] transition-colors duration-300 delay-75">Initiate Project</span>
-              <div className="absolute inset-0 bg-[#D4AF37] translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1] rounded-full" />
-              <div className="relative z-10 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-[#0A2A1A]/10 transition-colors duration-300 delay-75">
-                 <ArrowRight className="w-3 h-3 text-white group-hover:text-[#0A2A1A] transform group-hover:translate-x-0.5 transition-all duration-300 delay-75" />
-              </div>
-            </a>
-          </div>
-
-          {/* Metric 1 */}
-          <div className="col-span-1 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center md:border-r border-white/5 py-3 md:py-0 relative z-10">
-            <span className="text-white font-serif italic text-2xl md:text-3xl lg:text-4xl mb-1">25 Year</span>
-            <span className="text-[#D4AF37] font-sans text-[9px] md:text-[10px] tracking-[0.2em] uppercase font-bold text-center">Comprehensive Warranty</span>
-          </div>
-
-          {/* Metric 2 */}
-          <div className="col-span-1 md:col-span-4 lg:col-span-4 flex flex-col items-center justify-center py-3 md:py-0 relative z-10">
-            <span className="text-white font-serif italic text-2xl md:text-3xl lg:text-4xl mb-1">100%</span>
-            <span className="text-[#D4AF37] font-sans text-[9px] md:text-[10px] tracking-[0.2em] uppercase font-bold text-center">In-House Engineering</span>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="w-[150%] md:w-[120%] lg:w-[130%] h-[70vh] md:h-[120vh] transform md:scale-110 lg:scale-125 transform-origin-center pointer-events-auto opacity-30 md:opacity-100 translate-y-[20%] md:translate-y-0"
+          >
+            <ExplodedSolarArray />
+          </motion.div>
         </motion.div>
+
       </div>
+
+      {/* Bottom Coordinates */}
+      <div className="absolute bottom-8 left-6 md:left-12 lg:left-24 z-20 flex flex-col gap-1">
+        <span className="font-sans text-[9px] tracking-[0.3em] text-white/30 uppercase">LAT: 34.0522° N</span>
+        <span className="font-sans text-[9px] tracking-[0.3em] text-white/30 uppercase">LNG: 118.2437° W</span>
+      </div>
+
     </section>
   );
 }
