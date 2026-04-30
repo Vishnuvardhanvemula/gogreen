@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export function SolarPanelGraphic() {
   return (
-    <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px] pointer-events-none z-0 opacity-60 mix-blend-screen flex items-center justify-center">
+    <div className="absolute top-[30%] md:top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px] pointer-events-none z-0 opacity-60 mix-blend-screen flex items-center justify-center">
       
       {/* Container with Perspective */}
       <div className="relative w-full h-full flex items-center justify-center" style={{ perspective: '1200px' }}>
@@ -48,7 +48,7 @@ export function SolarPanelGraphic() {
               {/* Inner Cells Grid (Realistic Monocrystalline layout) */}
               <div className="absolute inset-2 md:inset-3 grid grid-cols-6 grid-rows-10 gap-[2px] bg-white/5 p-[1px] rounded-[4px]">
                 {Array.from({ length: 60 }).map((_, i) => (
-                  <div key={i} className="bg-[#040C1A] relative w-full h-full rounded-[2px] overflow-hidden group">
+                  <div key={i} className="bg-[#050A07] relative w-full h-full rounded-[2px] overflow-hidden group">
                     {/* Busbars (5 thin vertical silver lines) */}
                     <div className="absolute inset-0 flex justify-evenly px-0.5">
                       <div className="w-[1px] h-full bg-white/30" />

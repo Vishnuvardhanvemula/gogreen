@@ -104,10 +104,10 @@ export function HeroSection() {
               variants={textVars}
               className="text-white drop-shadow-2xl flex flex-col w-full"
             >
-              <span className="block font-heading font-semibold text-6xl md:text-8xl lg:text-[7.5rem] xl:text-[8.5rem] leading-[0.85] tracking-tighter uppercase drop-shadow-lg">
+              <span className="block font-heading font-semibold text-5xl sm:text-6xl md:text-8xl lg:text-[7.5rem] xl:text-[8.5rem] leading-[0.85] tracking-tighter uppercase drop-shadow-lg">
                 GO GREEN.
               </span>
-              <span className="block font-serif font-light italic text-white/90 text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-[1.1] tracking-tight mt-3 md:mt-4">
+              <span className="block font-serif font-light italic text-white/90 text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-[1.1] tracking-tight mt-2 md:mt-4">
                 Solar, done right.
               </span>
             </motion.h1>
@@ -131,13 +131,13 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full grid grid-cols-1 md:grid-cols-12 gap-0 bg-[#0A2A1A]/80 backdrop-blur-xl border border-white/5 rounded-2xl md:rounded-full p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group/bar"
+          className="w-full grid grid-cols-2 md:grid-cols-12 gap-y-4 md:gap-0 bg-[#0A2A1A]/80 backdrop-blur-xl border border-white/5 rounded-2xl md:rounded-full p-4 md:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group/bar"
         >
           {/* Subtle gold gradient shine inside the bar */}
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#D4AF37]/5 to-transparent -translate-x-full group-hover/bar:translate-x-full transition-transform duration-1000 ease-in-out pointer-events-none" />
 
           {/* CTA */}
-          <div className="col-span-1 md:col-span-5 lg:col-span-4 flex items-center justify-center md:justify-start md:border-r border-white/5 md:pr-8 md:pl-4 relative z-10 mb-6 md:mb-0">
+          <div className="col-span-2 md:col-span-5 lg:col-span-4 flex items-center justify-center md:justify-start md:border-r border-white/5 md:pr-8 md:pl-4 relative z-10">
             <a 
               href="#contact" 
               className="group relative flex items-center justify-between gap-4 px-8 py-4 md:py-3 bg-[#1B5E20] text-white font-sans text-[10px] md:text-xs tracking-[0.2em] uppercase font-bold overflow-hidden rounded-full w-full hover:scale-105 transition-transform duration-500 border border-white/10"
@@ -151,15 +151,15 @@ export function HeroSection() {
           </div>
 
           {/* Metric 1 */}
-          <div className="col-span-1 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center md:border-r border-white/5 py-3 md:py-0 relative z-10">
-            <span className="text-white font-serif italic text-2xl md:text-3xl lg:text-4xl mb-1">25 Year</span>
-            <span className="text-[#D4AF37] font-sans text-[9px] md:text-[10px] tracking-[0.2em] uppercase font-bold text-center">Comprehensive Warranty</span>
+          <div className="col-span-1 md:col-span-3 lg:col-span-4 flex flex-col items-center justify-center border-r border-white/5 md:py-0 relative z-10 px-2">
+            <span className="text-white font-serif italic text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-1">25 Year</span>
+            <span className="text-[#D4AF37] font-sans text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase font-bold text-center">Comprehensive Warranty</span>
           </div>
 
           {/* Metric 2 */}
-          <div className="col-span-1 md:col-span-4 lg:col-span-4 flex flex-col items-center justify-center py-3 md:py-0 relative z-10">
-            <span className="text-white font-serif italic text-2xl md:text-3xl lg:text-4xl mb-1">100%</span>
-            <span className="text-[#D4AF37] font-sans text-[9px] md:text-[10px] tracking-[0.2em] uppercase font-bold text-center">In-House Engineering</span>
+          <div className="col-span-1 md:col-span-4 lg:col-span-4 flex flex-col items-center justify-center md:py-0 relative z-10 px-2">
+            <span className="text-white font-serif italic text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-1">100%</span>
+            <span className="text-[#D4AF37] font-sans text-[8px] sm:text-[9px] md:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase font-bold text-center">In-House Engineering</span>
           </div>
         </motion.div>
       </div>

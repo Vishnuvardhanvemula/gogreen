@@ -64,15 +64,9 @@ export function Navbar() {
       >
         {/* Logo */}
         <motion.a href="/" className="shrink-0 flex items-center">
-          <Image
-            src="/images/GoGreen_Logo-removebg.png"
-            alt="GoGreen logo"
-            width={220}
-            height={56}
-            priority
-            unoptimized
-            className={`h-8 md:h-10 w-auto object-contain transition-all duration-200 ${isScrolled ? '' : 'brightness-0 invert'}`}
-          />
+          <span className={`font-heading font-bold text-2xl tracking-tighter uppercase transition-colors duration-200 ${isScrolled ? 'text-[#0A2A1A]' : 'text-white'}`}>
+            GOGREEN.
+          </span>
         </motion.a>
 
         {/* Desktop Links */}
@@ -157,12 +151,6 @@ export function Navbar() {
       {/* Mobile Menu Drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 bg-[#0D1F0F] flex flex-col pt-24 px-8 pb-12 overflow-y-auto">
-          <button
-            className="absolute top-5 right-6 text-white"
-            onClick={() => setMobileOpen(false)}
-          >
-            <X className="w-6 h-6" />
-          </button>
 
           {/* Services */}
           <div className="mb-8">
