@@ -50,13 +50,14 @@ export function Navbar() {
   return (
     <>
       <motion.nav
-        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-5"
+        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 pb-5"
         style={{
           backgroundColor,
           borderBottomWidth: "1px",
           borderBottomStyle: "solid",
           borderBottomColor: borderColor,
           boxShadow: isScrolled ? "0 4px 30px rgba(0,0,0,0.04)" : "none",
+          paddingTop: "max(1.25rem, env(safe-area-inset-top))",
         }}
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
