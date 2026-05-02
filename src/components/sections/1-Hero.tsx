@@ -31,7 +31,7 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-[100dvh] min-h-[750px] bg-[#06140b] overflow-hidden flex items-center"
+      className="relative w-full min-h-[100dvh] md:min-h-[750px] bg-[#06140b] overflow-hidden flex items-center"
     >
       {/* Dynamic Background Noise & Lighting */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.03] mix-blend-overlay" 
@@ -77,26 +77,14 @@ export function HeroSection() {
         {/* Left Content - Typography */}
         <motion.div 
           style={{ y: textY }}
-          className="w-full md:w-[50%] flex flex-col items-start pt-32 md:pt-0 z-30"
+          className="w-full md:w-[50%] flex flex-col items-start pt-20 md:pt-0 pb-16 md:pb-0 z-30 pointer-events-auto relative"
         >
-          {/* Micro-label */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="flex items-center gap-4 mb-8"
-          >
-            <div className="w-8 h-[1px] bg-[#D4AF37]" />
-            <span className="font-sans text-[10px] tracking-[0.25em] text-[#D4AF37] uppercase font-bold">
-              [ System 01 // Active ]
-            </span>
-          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading font-extrabold text-white text-5xl md:text-7xl lg:text-[6.5rem] leading-[1.05] tracking-tight mb-8"
+            className="font-heading font-extrabold text-white text-[2.75rem] leading-[1.1] sm:text-5xl md:text-7xl lg:text-[6.5rem] tracking-tight mb-6 md:mb-8"
           >
             Engineered <br />
             <span className="text-white/40">to Outlast.</span>
@@ -133,13 +121,13 @@ export function HeroSection() {
         {/* Right Content - 3D Array */}
         <motion.div 
           style={{ y: arrayY }}
-          className="absolute inset-0 md:relative w-full md:w-[65%] h-full flex items-center md:items-center justify-center md:justify-end pointer-events-none md:translate-x-[15%] lg:translate-x-[20%]"
+          className="absolute inset-0 top-16 md:top-0 md:relative w-full md:w-[65%] h-full flex items-center justify-center md:justify-end pointer-events-none md:translate-x-[15%] lg:translate-x-[20%] z-10"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 2, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="w-[150%] md:w-[120%] lg:w-[130%] h-[70vh] md:h-[120vh] transform md:scale-110 lg:scale-125 transform-origin-center pointer-events-auto opacity-30 md:opacity-100 translate-y-[20%] md:translate-y-0"
+            className="w-full md:w-[120%] lg:w-[130%] h-[80vh] md:h-[120vh] transform scale-[0.8] md:scale-110 lg:scale-125 transform-origin-center pointer-events-auto opacity-15 md:opacity-100 mb-0"
           >
             <ExplodedSolarArray />
           </motion.div>

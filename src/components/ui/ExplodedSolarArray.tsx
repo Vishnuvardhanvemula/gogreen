@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, Variants, useMotionValue, useSpring, useTransform, MotionValue } from "framer-motion";
-import { useState, useMemo, MouseEvent, useCallback } from "react";
+import { useState, useMemo, useEffect, MouseEvent, TouchEvent, useCallback } from "react";
 
 // Memoized single cell texture rendered as a pure CSS pattern — zero child divs
 const CELL_BG = `
@@ -12,7 +12,7 @@ const CELL_BG = `
 function SolarCellGrid() {
   // Single div with CSS grid pattern instead of 60 individual cells with 600+ DOM nodes
   return (
-    <div className="w-full h-full relative overflow-hidden bg-[#071321]">
+    <div className="w-full h-full relative overflow-hidden bg-[#050A07]">
       {/* The grid lines (cell gaps) */}
       <div
         className="absolute inset-0"
@@ -74,11 +74,28 @@ export function ExplodedSolarArray() {
     mouseY.set(((e.clientY - rect.top) / rect.height) * 2 - 1);
   }, [mouseX, mouseY]);
 
+  const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set(((e.touches[0].clientX - rect.left) / rect.width) * 2 - 1);
+    mouseY.set(((e.touches[0].clientY - rect.top) / rect.height) * 2 - 1);
+  }, [mouseX, mouseY]);
+
   const handleMouseLeave = useCallback(() => {
     setIsAssembled(false);
     mouseX.set(0);
     mouseY.set(0);
   }, [mouseX, mouseY]);
+
+  // Auto-animate on mobile where there's no hover
+  useEffect(() => {
+    const isTouchDevice = window.matchMedia("(hover: none)").matches;
+    if (isTouchDevice) {
+      // Start exploded after a short delay so the entry animation completes first
+      const t = setTimeout(() => setIsAssembled(false), 800);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   // Use translateY for GPU-composited layer separation (better perf than translateZ)
   const floatVariants: Variants = useMemo(() => ({
@@ -101,6 +118,9 @@ export function ExplodedSolarArray() {
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsAssembled(true)}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={() => setIsAssembled(true)}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={() => setIsAssembled(false)}
     >
       <motion.div
         className="relative w-[300px] h-[420px] md:w-[380px] md:h-[540px] lg:w-[420px] lg:h-[600px] will-change-transform"
